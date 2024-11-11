@@ -8,6 +8,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import com.deepdark.lab3.data.SolarProfitWithDeviation
+import com.deepdark.lab3.data.calculateSolarProfit
+import com.deepdark.lab3.utils.roundTo
 
 @Preview(showBackground = true)
 @Composable
@@ -17,10 +20,12 @@ fun SolarProfitCalculatorPagePreview() {
 
 @Composable
 fun SolarProfitCalculatorPage() {
-    var dailyAveragePower by remember { mutableStateOf("") }
-    var actualDeviation by remember { mutableStateOf("") }
-    var desiredDeviation by remember { mutableStateOf("") }
-    var electricityCost by remember { mutableStateOf("") }
+    var dailyAveragePower by remember { mutableStateOf("5") }
+    var actualDeviation by remember { mutableStateOf("1") }
+    var desiredDeviation by remember { mutableStateOf("0.25") }
+    var electricityCost by remember { mutableStateOf("7") }
+
+    var result by remember { mutableStateOf<SolarProfitWithDeviation?>(null) }
 
     val scrollState = rememberScrollState()
 
@@ -33,6 +38,7 @@ fun SolarProfitCalculatorPage() {
     ) {
         Text("Введіть параметри для розрахунку прибутку:")
 
+        // Input fields
         OutlinedTextField(
             value = dailyAveragePower,
             onValueChange = { dailyAveragePower = it },
@@ -61,11 +67,21 @@ fun SolarProfitCalculatorPage() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
+            val dailyPower = dailyAveragePower.toDoubleOrNull() ?: 0.0
+            val actualDev = actualDeviation.toDoubleOrNull() ?: 0.0
+            val desiredDev = desiredDeviation.toDoubleOrNull() ?: 0.0
+            val cost = electricityCost.toDoubleOrNull() ?: 0.0
 
-        }) {
+            result = calculateSolarProfit(dailyPower, actualDev, desiredDev, cost)
+        }, modifier = Modifier.fillMaxWidth()) {
             Text("Розрахувати прибуток")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        result?.let {
+            Text("Прибуток до удосконалення: ${it.netProfitWithActualDeviation.roundTo(1)} тис. грн")
+            Text("Прибуток після удосконалення: ${it.netProfitWithDesiredDeviation.roundTo(1)} тис. грн")
+        }
     }
 }
